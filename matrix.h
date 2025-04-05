@@ -1,5 +1,5 @@
-#ifndef ECCPP_H
-#define ECCPP_H
+#ifndef ECCPP_MATRIX_H
+#define ECCPP_MATRIX_H
 
 #include <vector>
 
@@ -24,4 +24,4 @@ public:
 
 }
 
-#endif // #ifndef ECCPP_H
+#endif // #ifndef ECCPP_MATRIX_H
