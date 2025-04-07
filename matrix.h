@@ -1,7 +1,7 @@
 #ifndef ECCPP_MATRIX_H
 #define ECCPP_MATRIX_H
 
-#include <vector>
+#include <initializer_list>
 #include <iostream>
 
 namespace eccpp {
