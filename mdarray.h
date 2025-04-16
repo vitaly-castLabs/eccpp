@@ -96,6 +96,33 @@ public:
         return result;
     }
 
+    // scalar multiplication and division
+    mdarray<T>& operator*=(const T& scalar) {
+        for (auto& element: data_)
+            element *= scalar;
+
+        return *this;
+    }
+    mdarray<T>& operator/=(const T& scalar) {
+        for (auto& element : data_)
+            element /= scalar;
+
+        return *this;
+    }
+
+    friend mdarray<T> operator*(const mdarray<T>& arr, const T& scalar) {
+        mdarray<T> result = arr;
+        return (result *= scalar);
+    }
+    friend mdarray<T> operator*(const T& scalar, const mdarray<T>& arr) {
+        return arr * scalar;
+    }
+
+    friend mdarray<T> operator/(const mdarray<T>& arr, const T& scalar) {
+        mdarray<T> result = arr;
+        return (result /= scalar);
+    }
+
     // matrix multiplication / tensor contraction
     mdarray<T> operator*(const mdarray<T>& rhs) const {
         auto& lhs = *this;
