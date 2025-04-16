@@ -59,6 +59,43 @@ public:
         return !(lhs == rhs);
     }
 
+    mdarray<T>& operator+=(const mdarray<T>& other) {
+        if (dims_ != other.dims_)
+            throw std::invalid_argument("Dimension mismatch for + or += operation");
+
+        for (size_t i = 0; i < data_.size(); ++i)
+            data_[i] += other.data_[i];
+
+        return *this;
+    }
+    mdarray<T>& operator-=(const mdarray<T>& other) {
+        if (dims_ != other.dims_)
+            throw std::invalid_argument("Dimension mismatch for - or -= operation");
+
+        for (size_t i = 0; i < data_.size(); ++i)
+            data_[i] -= other.data_[i];
+
+        return *this;
+    }
+
+    friend mdarray<T> operator+(const mdarray<T>& lhs, const mdarray<T>& rhs) {
+        mdarray<T> result = lhs;
+        return (result += rhs);
+    }
+    friend mdarray<T> operator-(const mdarray<T>& lhs, const mdarray<T>& rhs) {
+        mdarray<T> result = lhs;
+        return (result -= rhs);
+    }
+
+    // unary minus for expressions like B = -A or D = A + B - C
+    mdarray<T> operator-() const {
+        mdarray<T> result(*this);
+        for (auto& element: result.data_)
+            element = -element;
+
+        return result;
+    }
+
     // matrix multiplication / tensor contraction
     mdarray<T> operator*(const mdarray<T>& rhs) const {
         auto& lhs = *this;
