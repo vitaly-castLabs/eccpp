@@ -67,34 +67,20 @@ TEST_F(MdarrayMulTest, MatrixMultiplication) {
     eccpp::mdarray<int> B = createMatrixB();
     eccpp::mdarray<int> expected_AB = createExpectedAB();
 
-    // Test the * operator for matrix multiplication
-    eccpp::mdarray<int> AB = A * B;
+    // Test * (opp == 0) and *= (opp == 1) operators for matrix multiplication
+    for (int op = 0; op < 2; ++op) {
+        eccpp::mdarray<int> AB = op == 0 ? A * B : A;
+        if (op > 0)
+            AB *= B;
 
-    // Verify dimensions
-    ASSERT_EQ(AB.dimensions().size(), 2);
-    ASSERT_EQ(AB.dimensions()[0], 4);
-    ASSERT_EQ(AB.dimensions()[1], 3);
+        ASSERT_EQ(AB.dimensions().size(), 2);
+        ASSERT_EQ(AB.dimensions()[0], 4);
+        ASSERT_EQ(AB.dimensions()[1], 3);
 
-    // Verify values match expected result from the screenshot
-    for (size_t i = 0; i < 4; ++i) {
-        for (size_t j = 0; j < 3; ++j) {
-            EXPECT_EQ(AB({i, j}), expected_AB({i, j}));
-        }
-    }
-
-    // Test the *= operator
-    eccpp::mdarray<int> A_copy = createMatrixA();
-    A_copy *= B;
-
-    // Verify dimensions
-    ASSERT_EQ(A_copy.dimensions().size(), 2);
-    ASSERT_EQ(A_copy.dimensions()[0], 4);
-    ASSERT_EQ(A_copy.dimensions()[1], 3);
-
-    // Verify values
-    for (size_t i = 0; i < 4; ++i) {
-        for (size_t j = 0; j < 3; ++j) {
-            EXPECT_EQ(A_copy({i, j}), expected_AB({i, j}));
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 3; ++j) {
+                EXPECT_EQ(AB({i, j}), expected_AB({i, j}));
+            }
         }
     }
 }
