@@ -51,6 +51,73 @@ public:
         return data_[offset(indices)];
     }
 
+    // matrix multiplication / tensor contraction
+    mdarray<T> operator*(const mdarray<T>& rhs) const {
+        auto& lhs = *this;
+
+        const auto& lhs_dims = lhs.dimensions();
+        const auto& rhs_dims = rhs.dimensions();
+
+        if (lhs_dims.empty() || rhs_dims.empty())
+            throw std::invalid_argument("Cannot contract empty mdarray");
+
+        // contract last dimension of lhs with first dimension of rhs
+        const size_t contracted_dim = lhs_dims.back();
+        if (rhs_dims.front() != contracted_dim)
+            throw std::invalid_argument("Dimension mismatch for contraction");
+
+        // compute new dimensions: (lhs_dims[0..n - 2] + rhs_dims[1..m])
+        std::vector<size_t> new_dims;
+        new_dims.reserve(lhs_dims.size() + rhs_dims.size() - 2);
+        new_dims.insert(new_dims.end(), lhs_dims.begin(), lhs_dims.end() - 1);
+        new_dims.insert(new_dims.end(), rhs_dims.begin() + 1, rhs_dims.end());
+
+        mdarray<T> result(new_dims);
+        std::vector<size_t> indices(new_dims.size(), 0);
+        while (true) {
+            // compute the sum over the contracted dimension
+            T sum = 0;
+            for (size_t m = 0; m < contracted_dim; ++m) {
+                // build left indices: [indices[0..lhs_rank - 2], m]
+                std::vector<size_t> left_indices(lhs_dims.size() - 1);
+                for (size_t i = 0; i < lhs_dims.size() - 1; ++i)
+                    left_indices[i] = indices[i];
+
+                left_indices.push_back(m);
+
+                // build right indices: [m, indices[lhs_rank - 1..]]
+                std::vector<size_t> right_indices(rhs_dims.size());
+                right_indices[0] = m;
+                for (size_t i = 1; i < rhs_dims.size(); ++i)
+                    right_indices[i] = indices[lhs_dims.size() - 1 + i - 1];
+
+                sum += lhs(left_indices) * rhs(right_indices);
+            }
+
+            // assign to result
+            result(indices) = sum;
+
+            // increment indices (row-major order)
+            bool done = true;
+            for (int i = indices.size() - 1; i >= 0; --i) {
+                if (++indices[i] < new_dims[i]) {
+                    done = false;
+                    break;
+                }
+                indices[i] = 0;
+            }
+            if (done)
+                break;
+        }
+
+        return result;
+    }
+
+    mdarray<T>& operator*=(const mdarray<T>& rhs) {
+        *this = *this * rhs;
+        return *this;
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const mdarray<T>& arr) {
         const auto& dims = arr.dimensions();
         if (dims.size() == 1) {
