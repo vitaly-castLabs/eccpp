@@ -51,6 +51,14 @@ public:
         return data_[offset(indices)];
     }
 
+    // equality operators
+    friend bool operator==(const mdarray<T>& lhs, const mdarray<T>& rhs) {
+        return (lhs.dims_ == rhs.dims_) && (lhs.data_ == rhs.data_);
+    }
+    friend bool operator!=(const mdarray<T>& lhs, const mdarray<T>& rhs) {
+        return !(lhs == rhs);
+    }
+
     // matrix multiplication / tensor contraction
     mdarray<T> operator*(const mdarray<T>& rhs) const {
         auto& lhs = *this;

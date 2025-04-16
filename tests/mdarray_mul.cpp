@@ -82,6 +82,9 @@ TEST_F(MdarrayMulTest, MatrixMultiplication) {
                 EXPECT_EQ(AB({i, j}), expected_AB({i, j}));
             }
         }
+
+        // Check == operator too
+        EXPECT_EQ(AB, expected_AB);
     }
 }
 
