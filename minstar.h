@@ -4,12 +4,14 @@
 #define ECCPP_MINSTAR_H
 
 #include <cmath>
+#include <algorithm>
 
 #include "./sign.h"
 
 namespace eccpp {
 
-double minstar(double a, double b, bool approx) {
+template<typename T>
+T minstar(T a, T b, bool approx) {
     if (approx || std::isinf(a) || std::isinf(b))
         return sign(a) * sign(b) * std::min(std::abs(a), std::abs(b));
 
