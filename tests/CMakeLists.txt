@@ -15,7 +15,7 @@ endif()
 file(GLOB TEST_SOURCES "*.cpp")
 
 add_executable(eccpp_tests ${TEST_SOURCES})
-target_link_libraries(eccpp_tests PRIVATE eccpp gtest_main)
+target_link_libraries(eccpp_tests PRIVATE eccpp gtest gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(eccpp_tests)
