@@ -145,6 +145,18 @@ protected:
     }
 };
 
+TEST_F(KroneckerProductTest, KronProductNon2DThrows) {
+    eccpp::mdarray<int> A3D({2, 2, 2});
+    eccpp::mdarray<int> B2D({2, 2});
+    eccpp::mdarray<int> C1D({5});
+
+    EXPECT_THROW(eccpp::kron(A3D, B2D), std::invalid_argument);
+    EXPECT_THROW(eccpp::kron(B2D, A3D), std::invalid_argument);
+    EXPECT_THROW(eccpp::kron(A3D, C1D), std::invalid_argument);
+    EXPECT_THROW(eccpp::kron(C1D, B2D), std::invalid_argument);
+    EXPECT_THROW(eccpp::kron(B2D, C1D), std::invalid_argument);
+}
+
 TEST_F(KroneckerProductTest, Example1) {
     eccpp::mdarray<int> A = createMatrixA1();
     eccpp::mdarray<int> B = createMatrixB1();
