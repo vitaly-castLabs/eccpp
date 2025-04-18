@@ -64,7 +64,7 @@ TEST(PhiTest, DimensionMismatchThrows) {
     EXPECT_THROW(eccpp::phi(PM_iminus1, L_i, u_i, true), std::invalid_argument);
 }
 
-TEST(PhiTest, Polar5G) {
+TEST(PhiTest, Polar5GTest1) {
     // Define 3D dimensions {1, 1, 8}
     std::vector<size_t> dims = {1, 1, 8};
 
@@ -86,6 +86,36 @@ TEST(PhiTest, Polar5G) {
     // Expected PM_i after update
     eccpp::mdarray<double> expected(dims);
     std::vector<double> expected_values = {250, 240, 230, 230, 220, 210, 210, 60};
+    for (size_t k = 0; k < 8; ++k)
+        expected({0, 0, k}) = expected_values[k];
+
+    // Verify equality
+    EXPECT_EQ(result, expected);
+}
+
+
+TEST(PhiTest, Polar5GTest2) {
+    // Define 3D dimensions {1, 1, 8}
+    std::vector<size_t> dims = {1, 1, 8};
+
+    eccpp::mdarray<double> PM_iminus1(dims);
+    std::vector<double> pm_values = {0, 10, 10, 20, 20, 20, 20, 20};
+    for (size_t k = 0; k < 8; ++k)
+        PM_iminus1({0, 0, k}) = pm_values[k];
+
+    eccpp::mdarray<double> L_i(dims);
+    std::vector<double> l_values = {-30, 10, -30, -20, -20, -10, -10, -10};
+    for (size_t k = 0; k < 8; ++k)
+        L_i({0, 0, k}) = l_values[k];
+
+    auto u_i = 0.0;
+
+    // Call phi with approx_minstar = true
+    auto result = eccpp::phi(PM_iminus1, L_i, u_i, true);
+
+    // Expected PM_i after update
+    eccpp::mdarray<double> expected(dims);
+    std::vector<double> expected_values = {30, 10, 40, 40, 40, 30, 30, 30};
     for (size_t k = 0; k < 8; ++k)
         expected({0, 0, k}) = expected_values[k];
 
