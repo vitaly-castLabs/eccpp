@@ -13,9 +13,9 @@
 namespace eccpp {
 
 template <typename T>
-mdarray<T> phi(const mdarray<T>& PM_iminus1, const mdarray<T>& L_i, const mdarray<T>& u_i, bool approx_minstar) {
+mdarray<T> phi(const mdarray<T>& PM_iminus1, const mdarray<T>& L_i, const T u_i, bool approx_minstar) {
     // Check if all input dimensions match
-    if (PM_iminus1.dimensions() != L_i.dimensions() || PM_iminus1.dimensions() != u_i.dimensions())
+    if (PM_iminus1.dimensions() != L_i.dimensions())
         throw std::invalid_argument("phi: Input dimensions must be identical.");
 
     // Initialize PM_i as a copy of PM_iminus1
@@ -29,14 +29,13 @@ mdarray<T> phi(const mdarray<T>& PM_iminus1, const mdarray<T>& L_i, const mdarra
         while (true) {
             // Access current elements
             const T L_val = L_i(indices);
-            const T u_val = u_i(indices);
 
             // Compute flag condition
             const T s = sign(L_val);
             const T val = 0.5 * (1.0 - s);
 
             // Update PM_i if condition met
-            if (val != u_val)
+            if (val != u_i)
                 PM_i(indices) += std::abs(L_val);
 
             // Increment indices in row-major order
@@ -58,10 +57,9 @@ mdarray<T> phi(const mdarray<T>& PM_iminus1, const mdarray<T>& L_i, const mdarra
         while (true) {
             // Access current elements
             const T L_val = L_i(indices);
-            const T u_val = u_i(indices);
 
             // Compute log(1 + exp(-(1 - 2u_i)L_i))
-            const T exponent = -(1.0 - 2.0 * u_val) * L_val;
+            const T exponent = -(1.0 - 2.0 * u_i) * L_val;
             PM_i(indices) += std::log(1.0 + std::exp(exponent));
 
             // Increment indices in row-major order
