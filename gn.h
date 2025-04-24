@@ -10,7 +10,7 @@
 
 namespace eccpp {
 
-mdarray<int> gn(size_t n) {
+static mdarray<int> gn(size_t n) {
     if (!n || (n & (n - 1)) != 0)
         throw std::invalid_argument("n must be a power of 2");
 
