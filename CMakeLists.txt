@@ -1,8 +1,24 @@
 cmake_minimum_required(VERSION 3.14)
+
+# on Ubuntu 24.04 clang++ (18.1.3) produces much faster executables than g++ (13.3.0)
+set(CMAKE_CXX_COMPILER_NAMES clang++ g++ icpc c++ cxx)
 project(eccpp VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+elseif(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
+endif()
+
+# Enable LTO via CMake when supported
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -28,9 +44,13 @@ endif()
 
 install(FILES
     gn.h
+    hamdist.h
     kron.h
     mdarray.h
     minstar.h
+    phi.h
+    polar-enc.h
+    sign.h
     DESTINATION include/eccpp
 )
 

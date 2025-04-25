@@ -116,10 +116,10 @@ int main() {
         std::cout << "\rProcessed " << codewords.size() << " of " << codeword_count << " codewords (min dist: " << min_dist << ")";
     }
     const auto end = std::chrono::steady_clock::now();
-    const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-    std::cout << "\n\nDone in " << elapsed.count() << " seconds\n";
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "\n\nDone in " << elapsed.count() << " ms\n";
 
-    std::cout << "\nMinimum Hamming distance:  " << min_dist << "\n";
+    std::cout << "\nMinimum Hamming distance:     " << min_dist << "\n";
     std::cout << "Minimum repeat code distance: " << N / info_bits.size() << "\n";
 
     return 0;
