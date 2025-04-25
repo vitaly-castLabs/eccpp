@@ -34,7 +34,7 @@ int main() {
 
     std::sort(rows.begin(), rows.end(), [](const row& a, const row& b) {
         if (a.one_cnt == b.one_cnt)
-            return a.idx < b.idx;
+            return a.idx > b.idx;
         return a.one_cnt > b.one_cnt;
     });
 
