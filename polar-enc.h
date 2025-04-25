@@ -40,7 +40,7 @@ private:
 
 //
 // same thing as polar_enc, but uses butterfly polar transform instead of generator matrix.
-// I haven't measured performance yet, but I expect this to be faster.
+// Tons time faster than G_n multiplication for large N.
 //
 class polar_enc_butterfly {
 public:

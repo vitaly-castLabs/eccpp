@@ -2,16 +2,17 @@
 #define ECCPP_HAMDIST_H
 
 #include <vector>
+#include <cassert>
 
 #include "mdarray.h"
 
 namespace eccpp {
 
-int hamdist(const mdarray<int>& a, const mdarray<int>& b) {
+size_t hamdist(const mdarray<int>& a, const mdarray<int>& b) {
     if (a.dimensions() != b.dimensions())
         throw std::invalid_argument("Hamming distance: dimensions must match");
 
-    int distance = 0;
+    size_t distance = 0;
     const auto& dims = a.dimensions();
     std::vector<size_t> indices(dims.size(), 0);
 
