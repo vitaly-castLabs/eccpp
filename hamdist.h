@@ -1,0 +1,49 @@
+#ifndef ECCPP_HAMDIST_H
+#define ECCPP_HAMDIST_H
+
+#include <vector>
+
+#include "mdarray.h"
+
+namespace eccpp {
+
+int hamdist(const mdarray<int>& a, const mdarray<int>& b) {
+    if (a.dimensions() != b.dimensions())
+        throw std::invalid_argument("Hamming distance: dimensions must match");
+
+    int distance = 0;
+    const auto& dims = a.dimensions();
+    std::vector<size_t> indices(dims.size(), 0);
+
+    while (true) {
+        // Access current elements
+        const int a_val = a(indices);
+        const int b_val = b(indices);
+        assert(a_val == 0 || a_val == 1);
+        assert(b_val == 0 || b_val == 1);
+
+        // Increment distance if elements differ
+        if (a_val != b_val)
+            ++distance;
+
+        // Increment indices in row-major order
+        bool done = true;
+        for (int i = dims.size() - 1; i >= 0; --i) {
+            if (indices[i] + 1 < dims[i]) {
+                ++indices[i];
+                done = false;
+                break;
+            }
+            else
+                indices[i] = 0;
+        }
+        if (done)
+            break;
+    }
+
+    return distance;
+}
+
+} // namespace eccpp
+
+#endif // ECCPP_HAMDIST_H
