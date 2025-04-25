@@ -56,7 +56,11 @@ public:
         if (N != data.dimensions()[0])
             throw std::invalid_argument("Data size must match transform size");
 
-        auto result = data;
+        // "auto result = data;" trips GCC13's static analyzer (writing between 9 and 9223372036854775807 bytes
+        // into a region of size 8 overflows the destination [-Wstringop-overflow=])
+        mdarray<int> result({N});
+        result = data;
+
         for (size_t stage = 0; stage < log2N; ++stage) {
             size_t step = 1 << stage;
             for (size_t i = 0; i < N; i += 2 * step) {
