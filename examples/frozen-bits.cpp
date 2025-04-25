@@ -16,13 +16,16 @@
 #include "polar-enc.h"
 #include "hamdist.h"
 
+//#define N 8192
+#define N 2048
+//#define N 256
+
 struct row {
     size_t idx = 0;
     int one_cnt = 0;
 };
 
 int main() {
-    const size_t N = 8192;
     const auto gn = eccpp::gn(N);
 
     std::vector<row> rows;
@@ -59,12 +62,22 @@ int main() {
         ++idx;
     }
 
-    // stage 2: generate codewords for 14 information bits (corresponding to top rows with 8192 and 4096 ones),
-    // and calculate the minimum Hamming distance to compare it with repeat code. The latter would have 8192 / 14 = 584
-    // minimum distance.
+    // stage 2: generate codewords for all possible information bit combinations
+    // and calculate the minimum Hamming distance to compare it with repeat code
     eccpp::polar_enc_butterfly enc(N);
-    const std::vector<size_t> info_bits = {8191, 8190, 8189, 8187, 8183, 8175, 8159, 8127, 8063, 7935, 7679, 7167, 6143, 4095};
     size_t min_dist = N + 1;
+
+    const std::vector<size_t> info_bits =
+#if N == 8192
+        // top rows with 8192 and 4096 ones
+        {8191, 8190, 8189, 8187, 8183, 8175, 8159, 8127, 8063, 7935, 7679, 7167, 6143, 4095};
+#elif N == 2048
+        // top rows with 2048 and 1024 ones
+        {2047, 2046, 2045, 2043, 2039, 2031, 2015, 1983, 1919, 1791, 1535, 1023};
+#elif N == 256
+        // top rows with 256 and 128 ones
+        {255, 254, 253, 251, 247, 239, 223, 191, 127};
+#endif
 
     eccpp::mdarray<int> msg({N});
     for (size_t i = 0; i < N; ++i)
@@ -74,7 +87,7 @@ int main() {
     std::vector<eccpp::mdarray<int>> codewords;
     codewords.reserve(codeword_count);
 
-    std::cout << "\nGenerating codewords, might take a couple of hours...\n";
+    std::cout << "\nGenerating codewords, might take a while...\n\n";
     const auto start = std::chrono::steady_clock::now();
     while (codewords.size() < codeword_count) {
         const auto codeword = enc.encode(msg);
@@ -106,7 +119,8 @@ int main() {
     const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(end - start);
     std::cout << "\n\nDone in " << elapsed.count() << " seconds\n";
 
-    std::cout << "\nMinimum Hamming distance: " << min_dist << "\n";
+    std::cout << "\nMinimum Hamming distance:  " << min_dist << "\n";
+    std::cout << "Minimum repeat code distance: " << N / info_bits.size() << "\n";
 
     return 0;
 }
