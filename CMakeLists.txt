@@ -50,6 +50,7 @@ install(FILES
     minstar.h
     phi.h
     polar-enc.h
+    repeat-enc.h
     sign.h
     DESTINATION include/eccpp
 )

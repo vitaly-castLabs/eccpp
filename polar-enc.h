@@ -1,7 +1,6 @@
 #ifndef ECCPP_POLAR_ENC_H
 #define ECCPP_POLAR_ENC_H
 
-#include <vector>
 #include <cmath>
 
 #include "gn.h"
