@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 #include <chrono>
@@ -19,6 +20,24 @@
 //#define N 8192
 #define N 2048
 //#define N 256
+
+std::string chronoToHms(std::chrono::duration<int, std::milli> duration) {
+    const int total_ms = duration.count();
+    const int h = total_ms / 3600000;
+    const int m = (total_ms % 3600000) / 60000;
+    const int s = (total_ms % 60000) / 1000;
+    const int ms = total_ms % 1000;
+
+    std::ostringstream oss;
+    if (h > 0)
+        oss << std::setfill('0') << h << "h";
+    if (h > 0 || m > 0)
+        oss << std::setw(oss.tellp() ? 0 : 2) << std::setfill('0') << m << "m";
+    oss << std::setw(oss.tellp() ? 0 : 2) << std::setfill('0') << s << "."
+        << std::setw(3) << std::setfill('0') << ms << "s";
+
+    return oss.str();
+}
 
 struct row {
     size_t idx = 0;
@@ -113,11 +132,11 @@ int main() {
             }
         }
 
-        std::cout << "\rProcessed " << codewords.size() << " of " << codeword_count << " codewords (min dist: " << min_dist << ")";
+        std::cout << "\rProcessed " << codewords.size() << " of " << codeword_count << " codewords (min dist: " << min_dist << ")     ";
     }
     const auto end = std::chrono::steady_clock::now();
     const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "\n\nDone in " << elapsed.count() << " ms\n";
+    std::cout << "\n\nDone in " << chronoToHms(elapsed) << "\n";
 
     std::cout << "\nMinimum Hamming distance:     " << min_dist << "\n";
     std::cout << "Minimum repeat code distance: " << N / info_bits.size() << "\n";
