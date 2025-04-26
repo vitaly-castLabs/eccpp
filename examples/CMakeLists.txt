@@ -3,3 +3,6 @@ target_link_libraries(sim PRIVATE eccpp)
 
 add_executable(frozen-bits frozen-bits.cpp)
 target_link_libraries(frozen-bits PRIVATE eccpp)
+
+add_executable(polar-dist polar-dist.cpp)
+target_link_libraries(polar-dist PRIVATE eccpp)
