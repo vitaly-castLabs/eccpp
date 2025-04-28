@@ -5,45 +5,28 @@
 TEST(RepeatEncTest, EncodeBasic) {
     eccpp::repeat_bit_enc rb_enc(3);
 
-    eccpp::mdarray<int> data({3});
-    data({0}) = 0;
-    data({1}) = 0;
-    data({2}) = 1;
+    std::vector<int> data = {0, 0, 1};
     auto result = rb_enc.encode(data);
-    eccpp::mdarray<int> expected({9});
-    expected({0}) = 0;
-    expected({1}) = 0;
-    expected({2}) = 0;
-    expected({3}) = 0;
-    expected({4}) = 0;
-    expected({5}) = 0;
-    expected({6}) = 1;
-    expected({7}) = 1;
-    expected({8}) = 1;
-    EXPECT_EQ(result, expected);
+    EXPECT_EQ(result, std::vector<int>({0, 0, 0, 0, 0, 0, 1, 1, 1}));
 
     eccpp::repeat_msg_enc rm_enc(3);
     result = rm_enc.encode(data);
-    expected({0}) = 0;
-    expected({1}) = 0;
-    expected({2}) = 1;
-    expected({3}) = 0;
-    expected({4}) = 0;
-    expected({5}) = 1;
-    expected({6}) = 0;
-    expected({7}) = 0;
-    expected({8}) = 1;
-    EXPECT_EQ(result, expected);
-}
+    EXPECT_EQ(result, std::vector<int>({0, 0, 1, 0, 0, 1, 0, 0, 1}));
 
-TEST(RepeatEncTest, WrongParamHandling) {
-    eccpp::repeat_bit_enc rb_enc(3);
-    eccpp::repeat_msg_enc rm_enc(3);
+    // empty data
+    std::vector<int> empty_data;
+    result = rb_enc.encode(empty_data);
+    EXPECT_EQ(result, empty_data);
 
-    eccpp::mdarray<int> data({4, 4});
-    EXPECT_THROW(rb_enc.encode(data), std::invalid_argument);
-    EXPECT_THROW(rm_enc.encode(data), std::invalid_argument);
+    result = rm_enc.encode(empty_data);
+    EXPECT_EQ(result, empty_data);
 
-    EXPECT_THROW(eccpp::repeat_bit_enc(0), std::invalid_argument);
-    EXPECT_THROW(eccpp::repeat_msg_enc(0), std::invalid_argument);
+    // r == 0
+    rb_enc = eccpp::repeat_bit_enc(0);
+    result = rb_enc.encode(data);
+    EXPECT_EQ(result, empty_data);
+
+    rm_enc = eccpp::repeat_msg_enc(0);
+    result = rm_enc.encode(data);
+    EXPECT_EQ(result, empty_data);
 }
