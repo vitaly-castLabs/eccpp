@@ -51,12 +51,12 @@ int main() {
         {255, 254, 253, 251, 247, 239, 223, 191, 127};
 #endif
 
-    eccpp::mdarray<int> msg({N});
+    std::vector<int> msg(N);
     for (size_t i = 0; i < N; ++i)
-        msg({i}) = 0;
+        msg[i] = 0;
 
     const size_t codeword_count = 1 << info_bits.size();
-    std::vector<eccpp::mdarray<int>> codewords;
+    std::vector<std::vector<int>> codewords;
     codewords.reserve(codeword_count);
 
     std::cout << "\nGenerating codewords, might take a while...\n\n";
@@ -74,12 +74,12 @@ int main() {
 
         // increment message
         for (size_t i = 0; i < info_bits.size(); ++i) {
-            auto& bit = msg({info_bits[i]});
+            auto& bit = msg[info_bits[i]];
             bit ^= 1;
 
             if (bit) {
                 for (size_t j = 0; j < i; ++j)
-                    msg({info_bits[j]}) = 0;
+                    msg[info_bits[j]] = 0;
 
                 break;
             }
