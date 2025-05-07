@@ -14,6 +14,18 @@ std::vector<T> bits_to_llr(const std::vector<int>& bits) {
     return llr;
 }
 
+
+TEST(PolarDecTest, ThrowOnWrongInput) {
+    EXPECT_THROW(eccpp::polar_dec<T>(0), std::invalid_argument);
+    EXPECT_THROW(eccpp::polar_dec<T>(3), std::invalid_argument);
+    EXPECT_THROW(eccpp::polar_dec<T>(5), std::invalid_argument);
+
+    eccpp::polar_dec<T> dec(4);
+    EXPECT_THROW(dec.decode(bits_to_llr({1, 2, 3}), {0, 1}), std::invalid_argument);
+    EXPECT_THROW(dec.decode(bits_to_llr({0, 0, 0, 0}), {}), std::invalid_argument);
+    EXPECT_THROW(dec.decode(bits_to_llr({0, 0, 0, 0}), {0, 1, 2, 3, 4}), std::invalid_argument);
+}
+
 TEST(PolarDecTest, DecodeBasic4) {
     eccpp::polar_dec<T> dec(4);
     const std::vector<size_t> info_bits({0, 1, 2, 3});
@@ -57,5 +69,28 @@ TEST(PolarDecTest, DecodeBasic8) {
     cw = {1, 0, 0, 0, 0, 0, 1, 1};
     msg = {1, 1, 0, 1, 0, 1, 0, 1};
     result = dec.decode(bits_to_llr(cw), info_bits);
+    EXPECT_EQ(result, msg);
+}
+
+TEST(PolarDecTest, FrozenBits) {
+    eccpp::polar_enc_butterfly enc(32);
+    eccpp::polar_dec<T> dec(32);
+
+    std::vector<int> msg_with_frozen_bits(32);
+    std::vector<int> msg = {1, 0, 1, 0, 1, 0};
+    std::vector<size_t> info_bits = {15, 23, 27, 29, 30, 31};
+    for (auto i = 0; i < info_bits.size(); ++i)
+        msg_with_frozen_bits[info_bits[i]] = msg[i];
+
+    auto cw = enc.encode(msg_with_frozen_bits);
+    auto llr = bits_to_llr(cw);
+    // simulate some erasures
+    llr[1] = llr[2] = llr[4] = llr[8] = llr[16] = 0;
+    auto result = dec.decode(llr, info_bits);
+    EXPECT_EQ(result, msg);
+
+    // add a few bit flips
+    llr[0] = -llr[0], llr[7] = -llr[7], llr[31] = -llr[31];
+    result = dec.decode(llr, info_bits);
     EXPECT_EQ(result, msg);
 }

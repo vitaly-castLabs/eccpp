@@ -2,6 +2,7 @@
 #define ECCPP_POLAR_DEC_H
 
 #include <vector>
+#include <limits>
 
 #include "polar-enc.h"
 
@@ -29,24 +30,24 @@ public:
         if (info_bits.size() > n_)
             throw std::invalid_argument("Info bits size greater than transform size");
 
-        std::vector<int> result;
-        T best_match = 0;
+        std::vector<int> result(info_bits.size());
+        T best_match = std::numeric_limits<T>::lowest();
 
         // encode all possible messages and pick the best match
         polar_enc_butterfly enc(n_);
-        std::vector<int> msg(n_, 0);
+        std::vector<int> msg_with_frozen_bits(n_);
         while (true) {
-            const auto codeword = enc.encode(msg);
+            const auto codeword = enc.encode(msg_with_frozen_bits);
             T match = 0;
             for (size_t i = 0; i < n_; ++i)
                 match += codeword[i] ? -llr[i] : llr[i];
 
             if (match > best_match) {
                 best_match = match;
-                result = msg;
+                extract_message(result, msg_with_frozen_bits, info_bits);
             }
 
-            if (!next_message(msg, info_bits))
+            if (!next_message(msg_with_frozen_bits, info_bits))
                 break;
         }
 
@@ -56,19 +57,24 @@ public:
 private:
     // increment message bits (f are frozen bits): ff0f0 -> ff0f1 -> ff1f0 -> ff1f1. Returns
     // false (no more messages) at 11..1 -> 00..0 roll-over.
-    static bool next_message(std::vector<int>& msg, const std::vector<size_t>& info_bits) {
+    static bool next_message(std::vector<int>& msg_with_frozen_bits, const std::vector<size_t>& info_bits) {
         for (size_t i = 0; i < info_bits.size(); ++i) {
-            auto& bit = msg[info_bits[i]];
+            auto& bit = msg_with_frozen_bits[info_bits[i]];
             bit ^= 1;
 
             if (bit) {
                 for (size_t j = 0; j < i; ++j)
-                    msg[info_bits[j]] = 0;
+                    msg_with_frozen_bits[info_bits[j]] = 0;
 
                 return true;
             }
         }
         return false;
+    }
+
+    static void extract_message(std::vector<int>& msg, const std::vector<int>& msg_with_frozen_bits, const std::vector<size_t>& info_bits) {
+        for (size_t i = 0; i < info_bits.size(); ++i)
+            msg[i] = msg_with_frozen_bits[info_bits[i]];
     }
 
     const size_t n_;
