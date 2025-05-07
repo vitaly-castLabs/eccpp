@@ -12,7 +12,7 @@
 
 #include "gn.h"
 
-constexpr size_t N_START = 64;
+constexpr size_t N_START = 8;
 constexpr size_t N_END = 16384;
 
 struct row {
