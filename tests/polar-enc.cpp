@@ -37,23 +37,7 @@ TEST(PolarEncTest, EncodeBasic8) {
     result = enc.encode(data);
     expected = {1, 0, 0, 0, 0, 0, 1, 1};
     EXPECT_EQ(result, expected);
-
-    data = {1, 1, 0, 1, 0, 1, 0, 1};
-    result = enc.encode(data);
-    expected = {1, 0, 0, 0, 0, 0, 1, 1};
-    EXPECT_EQ(result, expected);
-
-    data = {1, 1, 0, 1, 0, 1, 0, 1};
-    result = enc.encode(data);
-    expected = {1, 0, 0, 0, 0, 0, 1, 1};
-    EXPECT_EQ(result, expected);
-
-    data = {1, 1, 0, 1, 0, 1, 0, 1};
-    result = enc.encode(data);
-    expected = {1, 0, 0, 0, 0, 0, 1, 1};
-    EXPECT_EQ(result, expected);
 }
-
 
 TEST(PolarEncTest, EncodeDimensionMismatchThrows) {
     EXPECT_THROW(eccpp::polar_enc(3), std::invalid_argument);
