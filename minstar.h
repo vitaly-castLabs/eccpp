@@ -6,7 +6,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "./sign.h"
+#include "sign.h"
 
 namespace eccpp {
 

@@ -52,9 +52,6 @@ int main() {
 #endif
 
     std::vector<int> msg(N);
-    for (size_t i = 0; i < N; ++i)
-        msg[i] = 0;
-
     const size_t codeword_count = 1 << info_bits.size();
     std::vector<std::vector<int>> codewords;
     codewords.reserve(codeword_count);

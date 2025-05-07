@@ -7,8 +7,8 @@
 #include <cmath>
 #include <algorithm>
 
-#include "./mdarray.h"
-#include "./sign.h"
+#include "mdarray.h"
+#include "sign.h"
 
 namespace eccpp {
 
