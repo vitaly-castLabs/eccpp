@@ -1,3 +1,6 @@
+#ifndef ECCPP_LONGEST_COMMON_H
+#define ECCPP_LONGEST_COMMON_H
+
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -7,7 +10,8 @@ namespace eccpp {
 //
 // longest common run (= contiguous subsequence), not to be confused with LC subsequence below.
 // The difference is that the term subsequence allows dropping elements (from both a and b):
-// lc_run({1, 0, 1, 0, 1}, {1, 1, 1}) is 1 while lc_subseq(..) is 3 (after zeroes are dropped)
+// lc_run({1, 0, 1, 0, 1}, {1, 1, 1}) is 1 while lc_subseq(..) is 3:
+// after all the zeroes are dropped, it's {1, 1, 1} and {1, 1, 1}
 //
 template <typename T, typename SizeType = int>
 size_t lc_run(const std::vector<T>& a, const std::vector<T>& b) {
@@ -86,3 +90,5 @@ SizeType lc_aligned_run(const std::vector<T>& a, const std::vector<T>& b) {
 }
 
 } // namespace eccpp
+
+#endif // ECCPP_LONGEST_COMMON_H
