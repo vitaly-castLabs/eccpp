@@ -4,9 +4,11 @@
 
 namespace eccpp {
 
+//
 // longest common run (= contiguous subsequence), not to be confused with LC subsequence below.
 // The difference is that the term subsequence allows dropping elements (from both a and b):
 // lc_run({1, 0, 1, 0, 1}, {1, 1, 1}) is 1 while lc_subseq(..) is 3 (after zeroes are dropped)
+//
 template <typename T, typename SizeType = int>
 size_t lc_run(const std::vector<T>& a, const std::vector<T>& b) {
     auto& shorter = (a.size() < b.size()) ? a : b;
@@ -56,6 +58,31 @@ size_t lc_subseq(const std::vector<T>& a, const std::vector<T>& b) {
     }
 
     return prev[n];
+}
+
+//
+// longest common run, but with the same starting index for both vectors, tbh I'd call it longest overlap:
+// a = {1, 1, 1, 0, 0}
+// b = {0, 0, 1, 1, 1}
+//            ^ - this is the only overlapping symbol
+// lc_aligned_run(a, b) is 1, while lc_run(a, b) is 3
+//
+template <typename T, typename SizeType = int>
+SizeType lc_aligned_run(const std::vector<T>& a, const std::vector<T>& b) {
+    SizeType max_len = 0;
+    SizeType curr_len = 0;
+    SizeType len = std::min<SizeType>(a.size(), b.size());
+
+    for (SizeType i = 0; i < len; ++i) {
+        if (a[i] == b[i]) {
+            ++curr_len;
+            max_len = std::max(max_len, curr_len);
+        }
+        else
+            curr_len = 0;
+    }
+
+    return max_len;
 }
 
 } // namespace eccpp
