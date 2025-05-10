@@ -44,22 +44,22 @@ int main(int argc, char **argv) {
     // N = 8192, rg's seed = 987654321, shuffle seed = 12345, num_iter = 500
     // info_bits[14] = {4095, 6143, 7167, 7679, 7935, 8063, 8127, 8159, 8175, 8183, 8187, 8189, 8190, 8191}
     // ------------------------------------------------------------------------------------------------------
-    // Crop: 15, success: 77.6%, fail: 22.4%
-    // Crop: 16, success: 87.8%, fail: 12.2%
-    // Crop: 17, success: 93.6%, fail: 6.4%
-    // Crop: 18, success: 98.6%, fail: 1.4%
-    // Crop: 19, success: 99.2%, fail: 0.8%
-    // Crop: 20, success: 99.0%, fail: 1.0%
-    // Crop: 21, success: 99.8%, fail: 0.2%
-    // Crop: 22, success: 100.0%, fail: 0.0%
-    // Crop: 23, success: 100.0%, fail: 0.0%
-    // Crop: 24, success: 100.0%, fail: 0.0%
-    // Crop: 25, success: 100.0%, fail: 0.0%
-    // Crop: 26, success: 100.0%, fail: 0.0%
-    // Crop: 27, success: 99.8%, fail: 0.2%
-    // Crop: 28, success: 100.0%, fail: 0.0%
-    // Crop: 29, success: 100.0%, fail: 0.0%
-    // Crop: 30, success: 100.0%, fail: 0.0%
+    // Crop: 15 bits, success: 77.6%, fail: 22.4%
+    // Crop: 16 bits, success: 87.8%, fail: 12.2%
+    // Crop: 17 bits, success: 93.6%, fail: 6.4%
+    // Crop: 18 bits, success: 98.6%, fail: 1.4%
+    // Crop: 19 bits, success: 99.2%, fail: 0.8%
+    // Crop: 20 bits, success: 99.0%, fail: 1.0%
+    // Crop: 21 bits, success: 99.8%, fail: 0.2%
+    // Crop: 22 bits, success: 100.0%, fail: 0.0%
+    // Crop: 23 bits, success: 100.0%, fail: 0.0%
+    // Crop: 24 bits, success: 100.0%, fail: 0.0%
+    // Crop: 25 bits, success: 100.0%, fail: 0.0%
+    // Crop: 26 bits, success: 100.0%, fail: 0.0%
+    // Crop: 27 bits, success: 99.8%, fail: 0.2%
+    // Crop: 28 bits, success: 100.0%, fail: 0.0%
+    // Crop: 29 bits, success: 100.0%, fail: 0.0%
+    // Crop: 30 bits, success: 100.0%, fail: 0.0%
     //
     // Average codeword decode time: 162 ms
     // ------------------------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
         const auto success_rate = 100.0 * succ / num_crop_iter;
         const auto fail_rate = 100.0 * fail / num_crop_iter;
-        std::cout << "Crop: " << crop << ", success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+        std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
     }
     const auto avg_decode_time = total_decode_time.count() / (num_crop_iter * (crop_size_end - crop_size_start + 1));
     std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n----------------------------------------\n";
@@ -132,22 +132,22 @@ int main(int argc, char **argv) {
     std::cout << "2/2 Scattered erasure simulation\n\n";
 
     // A scattered test run, same params as before:
-    // Scatter: 15, success: 73.4%, fail: 26.6%
-    // Scatter: 16, success: 87.6%, fail: 12.4%
-    // Scatter: 17, success: 94.4%, fail: 5.6%
-    // Scatter: 18, success: 97.0%, fail: 3.0%
-    // Scatter: 19, success: 98.0%, fail: 2.0%
-    // Scatter: 20, success: 99.8%, fail: 0.2%
-    // Scatter: 21, success: 99.8%, fail: 0.2%
-    // Scatter: 22, success: 99.6%, fail: 0.4%
-    // Scatter: 23, success: 99.8%, fail: 0.2%
-    // Scatter: 24, success: 100.0%, fail: 0.0%
-    // Scatter: 25, success: 100.0%, fail: 0.0%
-    // Scatter: 26, success: 100.0%, fail: 0.0%
-    // Scatter: 27, success: 100.0%, fail: 0.0%
-    // Scatter: 28, success: 100.0%, fail: 0.0%
-    // Scatter: 29, success: 100.0%, fail: 0.0%
-    // Scatter: 30, success: 100.0%, fail: 0.0%
+    // Scatter: 15 bits, success: 73.4%, fail: 26.6%
+    // Scatter: 16 bits, success: 87.6%, fail: 12.4%
+    // Scatter: 17 bits, success: 94.4%, fail: 5.6%
+    // Scatter: 18 bits, success: 97.0%, fail: 3.0%
+    // Scatter: 19 bits, success: 98.0%, fail: 2.0%
+    // Scatter: 20 bits, success: 99.8%, fail: 0.2%
+    // Scatter: 21 bits, success: 99.8%, fail: 0.2%
+    // Scatter: 22 bits, success: 99.6%, fail: 0.4%
+    // Scatter: 23 bits, success: 99.8%, fail: 0.2%
+    // Scatter: 24 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 25 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 26 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 27 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 28 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 29 bits, success: 100.0%, fail: 0.0%
+    // Scatter: 30 bits, success: 100.0%, fail: 0.0%
     // ------------------------------------------------------------------------------------------------------
     // And the 5G NR Matlab results, same params again:
     // Scatter: 15 bits, decoding success: 14.0%, wrong corrections: 10.0%, repeat code success: 0.0%
@@ -183,22 +183,23 @@ int main(int argc, char **argv) {
             eccpp::shuffle(codeword, shuffle_seed);
 
             // simulate erasures: mark every bit as "for-erasure" first and then unmark num_bits of them
+            const int mark_shift = 5; // can be any value >= 2
             for (auto& bit: codeword)
-                bit += 5;
+                bit += mark_shift;
 
             // careful: avoid marking the same bit multiple times. Not very likely, but still can happen
             int bits_to_mark = num_bits;
             while (bits_to_mark > 0) {
                 const size_t idx = rg() % N;
-                if (codeword[idx] >= 5) {
-                    codeword[idx] -= 5;
+                if (codeword[idx] >= mark_shift) {
+                    codeword[idx] -= mark_shift;
                     --bits_to_mark;
                 }
             }
 
             for (auto& bit: codeword) {
-                if (bit >= 5)
-                    bit = -1;
+                if (bit >= mark_shift)
+                    bit = -1;   // erasure
             }
 
             // decode
@@ -214,6 +215,6 @@ int main(int argc, char **argv) {
 
         const auto success_rate = 100.0 * succ / num_scatter_iter;
         const auto fail_rate = 100.0 * fail / num_scatter_iter;
-        std::cout << "Scatter: " << num_bits << ", success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+        std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
     }
 }
