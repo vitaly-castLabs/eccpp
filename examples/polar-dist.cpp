@@ -17,6 +17,7 @@
 //#define N 8192
 //#define N 2048
 #define N 256
+//#define N 8
 
 std::string chronoToHms(std::chrono::duration<int, std::milli> duration) {
     const int total_ms = duration.count();
@@ -42,14 +43,17 @@ int main() {
     // these indices are produced with frozen-bits.cpp
     const std::vector<size_t> info_bits =
 #if N == 8192
-        // top rows with 8192 and 4096 ones
-        {8191, 8190, 8189, 8187, 8183, 8175, 8159, 8127, 8063, 7935, 7679, 7167, 6143, 4095};
+        // rows with 8192 and 4096 ones
+        {4095, 6143, 7167, 7679, 7935, 8063, 8127, 8159, 8175, 8183, 8187, 8189, 8190, 8191};
 #elif N == 2048
-        // top rows with 2048 and 1024 ones
-        {2047, 2046, 2045, 2043, 2039, 2031, 2015, 1983, 1919, 1791, 1535, 1023};
+        // rows with 2048 and 1024 ones
+        {1023, 1535, 1791, 1919, 1983, 2015, 2031, 2039, 2043, 2045, 2046, 2047};
 #elif N == 256
-        // top rows with 256 and 128 ones
-        {255, 254, 253, 251, 247, 239, 223, 191, 127};
+        // rows with 256 and 128 ones
+        {127, 191, 223, 239, 247, 251, 253, 254, 255};
+#elif N == 8
+        // rows with 8 and 4 ones
+        {3, 5, 6, 7};
 #endif
 
     // unshuffled + shuffled with different seeds
