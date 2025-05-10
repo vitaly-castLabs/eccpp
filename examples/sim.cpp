@@ -34,29 +34,32 @@ int main(int argc, char **argv) {
 
     const std::uint_fast32_t shuffle_seed = 12345;
 
-    // crop test
-    std::cout << "Crop test. Wait for it (every iteration takes a couple of minutes)...\n\n";
+    // 1/2 "crop" simulation:
+    // only a limited contiguous span of bits is available for decoding (like an image crop, hence the name).
+    // An example for N = 8 and crop = 3: a codeword like {1, 1, 1, 1, 0, 0, 0, 0} turns into {_, _, _, 1, 0, 0, _, _}
+    // or {1, 1, 1, _, _, _, _, _} or {_, _, _, _, _, 0, 0, 0}, etc. on the receiver side.
+    std::cout << "1/2 Crop-like erasure simulation\n\nWait for it (every iteration takes a couple of minutes)...\n\n";
 
     // A test run for future reference:
     // N = 8192, rg's seed = 987654321, shuffle seed = 12345, num_iter = 500
     // info_bits[14] = {4095, 6143, 7167, 7679, 7935, 8063, 8127, 8159, 8175, 8183, 8187, 8189, 8190, 8191}
     // ------------------------------------------------------------------------------------------------------
-    // Crop size: 15, success: 77.6%, fail: 22.4%
-    // Crop size: 16, success: 87.8%, fail: 12.2%
-    // Crop size: 17, success: 93.6%, fail: 6.4%
-    // Crop size: 18, success: 98.6%, fail: 1.4%
-    // Crop size: 19, success: 99.2%, fail: 0.8%
-    // Crop size: 20, success: 99.0%, fail: 1.0%
-    // Crop size: 21, success: 99.8%, fail: 0.2%
-    // Crop size: 22, success: 100.0%, fail: 0.0%
-    // Crop size: 23, success: 100.0%, fail: 0.0%
-    // Crop size: 24, success: 100.0%, fail: 0.0%
-    // Crop size: 25, success: 100.0%, fail: 0.0%
-    // Crop size: 26, success: 100.0%, fail: 0.0%
-    // Crop size: 27, success: 99.8%, fail: 0.2%
-    // Crop size: 28, success: 100.0%, fail: 0.0%
-    // Crop size: 29, success: 100.0%, fail: 0.0%
-    // Crop size: 30, success: 100.0%, fail: 0.0%
+    // Crop: 15, success: 77.6%, fail: 22.4%
+    // Crop: 16, success: 87.8%, fail: 12.2%
+    // Crop: 17, success: 93.6%, fail: 6.4%
+    // Crop: 18, success: 98.6%, fail: 1.4%
+    // Crop: 19, success: 99.2%, fail: 0.8%
+    // Crop: 20, success: 99.0%, fail: 1.0%
+    // Crop: 21, success: 99.8%, fail: 0.2%
+    // Crop: 22, success: 100.0%, fail: 0.0%
+    // Crop: 23, success: 100.0%, fail: 0.0%
+    // Crop: 24, success: 100.0%, fail: 0.0%
+    // Crop: 25, success: 100.0%, fail: 0.0%
+    // Crop: 26, success: 100.0%, fail: 0.0%
+    // Crop: 27, success: 99.8%, fail: 0.2%
+    // Crop: 28, success: 100.0%, fail: 0.0%
+    // Crop: 29, success: 100.0%, fail: 0.0%
+    // Crop: 30, success: 100.0%, fail: 0.0%
     //
     // Average codeword decode time: 162 ms
     // ------------------------------------------------------------------------------------------------------
@@ -78,13 +81,13 @@ int main(int argc, char **argv) {
     // Crop: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%
     // Crop: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%
 
-    const int num_iter = 500;
+    const int num_crop_iter = 500;
     const auto crop_size_start = 15;
     const auto crop_size_end = 30;
     std::chrono::milliseconds total_decode_time{};
     for (int crop = crop_size_start; crop <= crop_size_end; ++crop) {
         int succ = 0, fail = 0;
-        for (int i = 0; i < num_iter; ++i) {
+        for (int i = 0; i < num_crop_iter; ++i) {
             // generate random message
             std::generate(msg.begin(), msg.end(), [&rg]() { return rg() & 1; });
             // combine with frozen bits
@@ -94,7 +97,7 @@ int main(int argc, char **argv) {
             auto codeword = enc.encode(msg_with_frozen_bits);
             eccpp::shuffle(codeword, shuffle_seed);
 
-            // simulate erasures
+            // simulate erasures: everything outside of the "crop" span is erased
             const auto crop_start = rg() % (N - crop + 1);
             const auto crop_end = crop_start + crop;
             for (int i = 0; i < crop_start; ++i)
@@ -116,10 +119,101 @@ int main(int argc, char **argv) {
                 ++fail;
         }
 
-        const auto success_rate = 100.0 * succ / num_iter;
-        const auto fail_rate = 100.0 * fail / num_iter;
-        std::cout << "Crop size: " << crop << ", success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+        const auto success_rate = 100.0 * succ / num_crop_iter;
+        const auto fail_rate = 100.0 * fail / num_crop_iter;
+        std::cout << "Crop: " << crop << ", success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
     }
-    const auto avg_decode_time = total_decode_time.count() / (num_iter * (crop_size_end - crop_size_start + 1));
-    std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n";
+    const auto avg_decode_time = total_decode_time.count() / (num_crop_iter * (crop_size_end - crop_size_start + 1));
+    std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n----------------------------------------\n";
+
+    // 2/2 "scatter" simulation:
+    // scattered erasure simulation: only fixed number of randomly chosen bits are preserved.
+    // {1, 1, 1, 1, 0, 0, 0, 0} -> {_, 1, _, _, 0, _, _, 0} or {1, 1, _, _, 0, _, _, _}, etc.
+    std::cout << "2/2 Scattered erasure simulation\n\n";
+
+    // A scattered test run, same params as before:
+    // Scatter: 15, success: 73.4%, fail: 26.6%
+    // Scatter: 16, success: 87.6%, fail: 12.4%
+    // Scatter: 17, success: 94.4%, fail: 5.6%
+    // Scatter: 18, success: 97.0%, fail: 3.0%
+    // Scatter: 19, success: 98.0%, fail: 2.0%
+    // Scatter: 20, success: 99.8%, fail: 0.2%
+    // Scatter: 21, success: 99.8%, fail: 0.2%
+    // Scatter: 22, success: 99.6%, fail: 0.4%
+    // Scatter: 23, success: 99.8%, fail: 0.2%
+    // Scatter: 24, success: 100.0%, fail: 0.0%
+    // Scatter: 25, success: 100.0%, fail: 0.0%
+    // Scatter: 26, success: 100.0%, fail: 0.0%
+    // Scatter: 27, success: 100.0%, fail: 0.0%
+    // Scatter: 28, success: 100.0%, fail: 0.0%
+    // Scatter: 29, success: 100.0%, fail: 0.0%
+    // Scatter: 30, success: 100.0%, fail: 0.0%
+    // ------------------------------------------------------------------------------------------------------
+    // And the 5G NR Matlab results, same params again:
+    // Scatter: 15 bits, decoding success: 14.0%, wrong corrections: 10.0%, repeat code success: 0.0%
+    // Scatter: 16 bits, decoding success: 25.0%, wrong corrections: 8.0%, repeat code success: 0.0%
+    // Scatter: 17 bits, decoding success: 40.0%, wrong corrections: 8.0%, repeat code success: 1.0%
+    // Scatter: 18 bits, decoding success: 57.0%, wrong corrections: 4.0%, repeat code success: 1.0%
+    // Scatter: 19 bits, decoding success: 71.0%, wrong corrections: 4.0%, repeat code success: 2.0%
+    // Scatter: 20 bits, decoding success: 82.0%, wrong corrections: 2.0%, repeat code success: 1.0%
+    // Scatter: 21 bits, decoding success: 90.0%, wrong corrections: 2.0%, repeat code success: 3.0%
+    // Scatter: 22 bits, decoding success: 94.0%, wrong corrections: 1.0%, repeat code success: 3.0%
+    // Scatter: 23 bits, decoding success: 97.0%, wrong corrections: 1.0%, repeat code success: 5.0%
+    // Scatter: 24 bits, decoding success: 98.0%, wrong corrections: 0.0%, repeat code success: 8.0%
+    // Scatter: 25 bits, decoding success: 99.0%, wrong corrections: 0.0%, repeat code success: 11.0%
+    // Scatter: 26 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 11.0%
+    // Scatter: 27 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 16.0%
+    // Scatter: 28 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 17.0%
+    // Scatter: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 23.0%
+    // Scatter: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 26.0%
+
+    const auto scatter_size_start = 15;
+    const auto scatter_size_end = 30;
+    const int num_scatter_iter = 500;
+    for (int num_bits = scatter_size_start; num_bits <= scatter_size_end; ++num_bits) {
+        int succ = 0, fail = 0;
+        for (int i = 0; i < num_scatter_iter; ++i) {
+            // generate random message
+            std::generate(msg.begin(), msg.end(), [&rg]() { return rg() & 1; });
+            // combine with frozen bits
+            for (size_t i = 0; i < info_bits.size(); ++i)
+                msg_with_frozen_bits[info_bits[i]] = msg[i];
+            // encode
+            auto codeword = enc.encode(msg_with_frozen_bits);
+            eccpp::shuffle(codeword, shuffle_seed);
+
+            // simulate erasures: mark every bit as "for-erasure" first and then unmark num_bits of them
+            for (auto& bit: codeword)
+                bit += 5;
+
+            // careful: avoid marking the same bit multiple times. Not very likely, but still can happen
+            int bits_to_mark = num_bits;
+            while (bits_to_mark > 0) {
+                const size_t idx = rg() % N;
+                if (codeword[idx] >= 5) {
+                    codeword[idx] -= 5;
+                    --bits_to_mark;
+                }
+            }
+
+            for (auto& bit: codeword) {
+                if (bit >= 5)
+                    bit = -1;
+            }
+
+            // decode
+            auto llr = bits_to_llr(codeword);
+            eccpp::unshuffle(llr, shuffle_seed);
+            auto result = dec.decode(llr, info_bits);
+
+            if (result == msg)
+                ++succ;
+            else
+                ++fail;
+        }
+
+        const auto success_rate = 100.0 * succ / num_scatter_iter;
+        const auto fail_rate = 100.0 * fail / num_scatter_iter;
+        std::cout << "Scatter: " << num_bits << ", success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+    }
 }
