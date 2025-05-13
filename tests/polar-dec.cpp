@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <random>
 
 #include "polar-dec.h"
 
@@ -34,19 +35,19 @@ TEST(PolarDecTest, DecodeBasic4) {
     std::vector<int> cw(4);
     auto msg = cw; // happen to be the same
     auto result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 
     // 1111 -> polar_enc -> 0001 -> polar_dec -> 1111
     cw = {0, 0, 0, 1};
     msg = {1, 1, 1, 1};
     result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 
     // 0110 -> 0110
     cw = {0, 1, 1, 0};
     msg = cw;
     result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 }
 
 TEST(PolarDecTest, DecodeBasic8) {
@@ -57,19 +58,19 @@ TEST(PolarDecTest, DecodeBasic8) {
     std::vector<int> cw(8);
     auto msg = cw;
     auto result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 
     // 11111111 -> 00000001
     cw = {0, 0, 0, 0, 0, 0, 0, 1};
     msg = {1, 1, 1, 1, 1, 1, 1, 1};
     result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 
     // 11010101 -> 10000011
     cw = {1, 0, 0, 0, 0, 0, 1, 1};
     msg = {1, 1, 0, 1, 0, 1, 0, 1};
     result = dec.decode(bits_to_llr(cw), info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 }
 
 TEST(PolarDecTest, FrozenBits) {
@@ -87,10 +88,38 @@ TEST(PolarDecTest, FrozenBits) {
     // simulate some erasures
     llr[1] = llr[2] = llr[4] = llr[8] = llr[16] = 0;
     auto result = dec.decode(llr, info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
 
     // add a few bit flips
     llr[0] = -llr[0], llr[7] = -llr[7], llr[31] = -llr[31];
     result = dec.decode(llr, info_bits);
-    EXPECT_EQ(result, msg);
+    EXPECT_EQ(result.msg, msg);
+}
+
+TEST(PolarDecTest, Confidence) {
+    // deterministic LCG for reproducible results
+    std::minstd_rand rg;
+    rg.seed(301);
+
+    eccpp::polar_enc_butterfly enc(256);
+    eccpp::polar_dec<T> dec(256);
+    std::vector<int> msg(256);
+    const std::vector<size_t> info_bits({127, 191, 223, 239, 247, 251, 253, 254, 255});
+
+    for (auto iter = 0; iter < 100; ++iter) {
+        for (auto i = 0; i < info_bits.size(); ++i)
+            msg[info_bits[i]] = rg() & 1;
+
+        auto cw = enc.encode(msg);
+        auto llr = bits_to_llr(cw);
+        const auto result_intact = dec.decode(llr, info_bits);
+
+        for (auto& v: llr) {
+            if ((rg() & 3) == 0)
+                v = -v;
+        }
+
+        const auto result_noisy = dec.decode(llr, info_bits);
+        EXPECT_LT(result_noisy.confidence, result_intact.confidence);
+    }
 }

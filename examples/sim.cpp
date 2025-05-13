@@ -81,15 +81,17 @@ int main(int argc, char **argv) {
     // Crop: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%
     // Crop: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%
 
-    const int num_crop_iter = 500;
+    const int num_crop_iter = 100;
     const auto crop_size_start = 15;
     const auto crop_size_end = 30;
     std::chrono::milliseconds total_decode_time{};
     for (int crop = crop_size_start; crop <= crop_size_end; ++crop) {
         int succ = 0, fail = 0;
+        float succ_confidence = 0;
         for (int i = 0; i < num_crop_iter; ++i) {
             // generate random message
             std::generate(msg.begin(), msg.end(), [&rg]() { return rg() & 1; });
+
             // combine with frozen bits
             for (size_t i = 0; i < info_bits.size(); ++i)
                 msg_with_frozen_bits[info_bits[i]] = msg[i];
@@ -113,15 +115,15 @@ int main(int argc, char **argv) {
             const auto end = std::chrono::steady_clock::now();
             total_decode_time += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-            if (result == msg)
-                ++succ;
+            if (result.msg == msg)
+                ++succ, succ_confidence += result.confidence;
             else
                 ++fail;
         }
 
         const auto success_rate = 100.0 * succ / num_crop_iter;
         const auto fail_rate = 100.0 * fail / num_crop_iter;
-        std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+        std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << succ_confidence / succ << "\n";
     }
     const auto avg_decode_time = total_decode_time.count() / (num_crop_iter * (crop_size_end - crop_size_start + 1));
     std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n----------------------------------------\n";
@@ -167,11 +169,12 @@ int main(int argc, char **argv) {
     // Scatter: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 23.0%
     // Scatter: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 26.0%
 
+    const int num_scatter_iter = 100;
     const auto scatter_size_start = 15;
     const auto scatter_size_end = 30;
-    const int num_scatter_iter = 500;
     for (int num_bits = scatter_size_start; num_bits <= scatter_size_end; ++num_bits) {
         int succ = 0, fail = 0;
+        float succ_confidence = 0;
         for (int i = 0; i < num_scatter_iter; ++i) {
             // generate random message
             std::generate(msg.begin(), msg.end(), [&rg]() { return rg() & 1; });
@@ -207,14 +210,14 @@ int main(int argc, char **argv) {
             eccpp::unshuffle(llr, shuffle_seed);
             auto result = dec.decode(llr, info_bits);
 
-            if (result == msg)
-                ++succ;
+            if (result.msg == msg)
+                ++succ, succ_confidence += result.confidence;
             else
                 ++fail;
         }
 
         const auto success_rate = 100.0 * succ / num_scatter_iter;
         const auto fail_rate = 100.0 * fail / num_scatter_iter;
-        std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::fixed << std::setprecision(1) << fail_rate << "%\n";
+        std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << succ_confidence / succ << "\n";
     }
 }

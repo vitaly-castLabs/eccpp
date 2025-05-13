@@ -17,10 +17,15 @@ public:
             throw std::invalid_argument("n must be a power of 2");
     }
 
+    struct result {
+        std::vector<int> msg;
+        T confidence = 0;
+    };
+
     // llr is a vector of Log-Likelihood Ratios for soft decoding: log(p(0)/p(1)). I.e. a negative LLR
     // value means that the bit is more likely to be 1, while a positive value means that the bit is
     // more likely to be 0. Zero LLR stands for "no idea" / "erasure" / "the bit was punctured" / etc.
-    std::vector<int> decode(const std::vector<T>& llr, const std::vector<size_t>& info_bits) const {
+    result decode(const std::vector<T>& llr, const std::vector<size_t>& info_bits) const {
         if (llr.size() != n_)
             throw std::invalid_argument("LLR size must match transform size");
 
@@ -30,10 +35,12 @@ public:
         if (info_bits.size() > n_)
             throw std::invalid_argument("Info bits size greater than transform size");
 
-        std::vector<int> result(info_bits.size());
-        T best_match = std::numeric_limits<T>::lowest();
+        result dec_result;
+        dec_result.msg.resize(info_bits.size());
 
         // encode all possible messages and pick the best match
+        T best_match = std::numeric_limits<T>::lowest();
+        T second_best_match = best_match;
         polar_enc_butterfly enc(n_);
         std::vector<int> msg_with_frozen_bits(n_);
         while (true) {
@@ -43,15 +50,26 @@ public:
                 match += codeword[i] ? -llr[i] : llr[i];
 
             if (match > best_match) {
+                second_best_match = best_match;
                 best_match = match;
-                extract_message(result, msg_with_frozen_bits, info_bits);
+                extract_message(dec_result.msg, msg_with_frozen_bits, info_bits);
             }
+            else if (match > second_best_match)
+                second_best_match = match;
 
             if (!next_message(msg_with_frozen_bits, info_bits))
                 break;
         }
 
-        return result;
+        T llr_sum = 0;
+        for (auto v: llr)
+            llr_sum += std::abs(v);
+
+        // ideally the best match should be close to sum(abs(llr)) and the runner-up should be
+        // significantly lower - if both are true, then we can be confident we didn't pick up
+        // a random value
+        dec_result.confidence = best_match * (best_match - second_best_match) / (llr_sum * llr_sum);
+        return dec_result;
     }
 
 private:
