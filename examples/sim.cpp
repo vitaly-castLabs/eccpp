@@ -6,15 +6,18 @@
 
 #include "polar-enc.h"
 #include "polar-dec.h"
-#include "shuffle.h"
 
 static const struct {
     size_t N = 8192;
-    bool fast_run = true;
+    // number of iterations to control execution time vs accuracy:
+    // * 1 is the fastest (3-5 codewords per each case);
+    // * 100 is comprehensive (can be set even higher if computation
+    // time is not an issue)
+    int iter_factor = 1;
 
     bool erasure_crop = true;
     bool erasure_scatter = true;
-    bool erasure_crop_with_correlation = true;
+    bool erasure_crop_unaligned = false;
 } params;
 
 std::vector<float> bits_to_llr(const std::vector<int>& bits) {
@@ -28,8 +31,9 @@ std::vector<float> bits_to_llr(const std::vector<int>& bits) {
 }
 
 int main(int argc, char **argv) {
-    eccpp::polar_enc_butterfly enc(params.N);
-    eccpp::polar_dec<float> dec(params.N);
+    const std::uint_fast32_t permutation_seed = 12345;
+    eccpp::polar_enc_butterfly enc(params.N, permutation_seed);
+    eccpp::polar_dec<float> dec(params.N, permutation_seed);
     std::vector<int> msg_with_frozen_bits(params.N);
     std::vector<size_t> info_bits = {4095, 6143, 7167, 7679, 7935, 8063, 8127, 8159, 8175, 8183, 8187, 8189, 8190, 8191};
 
@@ -39,14 +43,13 @@ int main(int argc, char **argv) {
     std::minstd_rand rg;
     rg.seed(987654321);
 
-    const std::uint_fast32_t shuffle_seed = 12345;
-
+    std::cout << "\nPolar encoder/decoder simulation\n";
     if (params.erasure_crop) {
         // "crop" simulation:
         // only a limited contiguous span of bits is available for decoding (like an image crop, hence the name).
         // An example for N = 8 and crop = 3: a codeword like {1, 1, 1, 1, 0, 0, 0, 0} turns into {_, _, _, 1, 0, 0, _, _}
         // or {1, 1, 1, _, _, _, _, _} or {_, _, _, _, _, 0, 0, 0}, etc. on the receiver side.
-        std::cout << "\n# Crop-like erasure simulation\n\nWait for it (every iteration takes a couple of minutes)...\n\n";
+        std::cout << "\n# Crop-like erasure simulation:\n";
 
         // A test run for future reference:
         // N = 8192, rg's seed = 987654321, shuffle seed = 12345, num_iter = 500
@@ -89,7 +92,7 @@ int main(int argc, char **argv) {
         // Crop: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%
         // Crop: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%
 
-        const int num_crop_iter = params.fast_run ? 20 : 400;
+        const int num_crop_iter = params.iter_factor * 3;
         const auto crop_size_start = 15;
         const auto crop_size_end = 30;
         std::chrono::milliseconds total_decode_time{};
@@ -105,7 +108,6 @@ int main(int argc, char **argv) {
                     msg_with_frozen_bits[info_bits[i]] = msg[i];
                 // encode
                 auto codeword = enc.encode(msg_with_frozen_bits);
-                eccpp::shuffle(codeword, shuffle_seed);
 
                 // simulate erasures: everything outside of the "crop" span is erased
                 const auto crop_start = rg() % (params.N - crop + 1);
@@ -118,7 +120,6 @@ int main(int argc, char **argv) {
                 // decode
                 auto llr = bits_to_llr(codeword);
                 const auto start = std::chrono::steady_clock::now();
-                eccpp::unshuffle(llr, shuffle_seed);
                 auto result = dec.decode(llr, info_bits);
                 const auto end = std::chrono::steady_clock::now();
                 total_decode_time += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -131,7 +132,8 @@ int main(int argc, char **argv) {
 
             const auto success_rate = 100.0 * succ / num_crop_iter;
             const auto fail_rate = 100.0 * fail / num_crop_iter;
-            std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << succ_confidence / succ << "\n";
+            const auto confidence = succ > 0 ? succ_confidence / succ : 0;
+            std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << confidence << "\n";
         }
         const auto avg_decode_time = total_decode_time.count() / (num_crop_iter * (crop_size_end - crop_size_start + 1));
         std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n----------------------------------------\n";
@@ -143,7 +145,7 @@ int main(int argc, char **argv) {
         // "scatter" simulation:
         // scattered erasure simulation: only fixed number of randomly chosen bits are preserved.
         // {1, 1, 1, 1, 0, 0, 0, 0} -> {_, 1, _, _, 0, _, _, 0} or {1, 1, _, _, 0, _, _, _}, etc.
-        std::cout << "\n# Scattered erasure simulation\n\n";
+        std::cout << "\n# Scattered erasure simulation:\n";
 
         // A scattered test run, same params as before:
         // Scatter: 15 bits, success: 73.4%, fail: 26.6%
@@ -181,7 +183,7 @@ int main(int argc, char **argv) {
         // Scatter: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 23.0%
         // Scatter: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 26.0%
 
-        const int num_scatter_iter = params.fast_run ? 20 : 400;
+        const int num_scatter_iter = params.iter_factor * 3;
         const auto scatter_size_start = 15;
         const auto scatter_size_end = 30;
         for (int num_bits = scatter_size_start; num_bits <= scatter_size_end; ++num_bits) {
@@ -195,7 +197,6 @@ int main(int argc, char **argv) {
                     msg_with_frozen_bits[info_bits[i]] = msg[i];
                 // encode
                 auto codeword = enc.encode(msg_with_frozen_bits);
-                eccpp::shuffle(codeword, shuffle_seed);
 
                 // simulate erasures: mark every bit as "for-erasure" first and then unmark num_bits of them
                 const int mark_shift = 5; // can be any value >= 2
@@ -219,7 +220,6 @@ int main(int argc, char **argv) {
 
                 // decode
                 auto llr = bits_to_llr(codeword);
-                eccpp::unshuffle(llr, shuffle_seed);
                 auto result = dec.decode(llr, info_bits);
 
                 if (result.msg == msg)
@@ -230,8 +230,57 @@ int main(int argc, char **argv) {
 
             const auto success_rate = 100.0 * succ / num_scatter_iter;
             const auto fail_rate = 100.0 * fail / num_scatter_iter;
-            std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << succ_confidence / succ << "\n";
+            const auto confidence = succ > 0 ? succ_confidence / succ : 0;
+            std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << confidence << "\n";
         }
+    }
+
+    if (params.erasure_crop_unaligned) {
+        std::cout << "\n# Crop-like erasure simulation with unknown crop location:\n";
+
+        // this is a lot slower, no x3 factor
+        const int num_crop_iter = params.iter_factor;
+        const auto crop_size_start = 15;
+        const auto crop_size_end = 30;
+        std::chrono::milliseconds total_decode_time{};
+        for (int crop = crop_size_start; crop <= crop_size_end; ++crop) {
+            int succ = 0, fail = 0;
+            float succ_confidence = 0;
+            for (int i = 0; i < num_crop_iter; ++i) {
+                // generate random message
+                std::generate(msg.begin(), msg.end(), [&rg]() { return rg() & 1; });
+
+                // combine with frozen bits
+                for (size_t i = 0; i < info_bits.size(); ++i)
+                    msg_with_frozen_bits[info_bits[i]] = msg[i];
+                // encode
+                auto codeword = enc.encode(msg_with_frozen_bits);
+
+                // simulate erasures: everything outside of the "crop" span is erased
+                const auto crop_start = rg() % (params.N - crop + 1);
+                const auto crop_end = crop_start + crop;
+                std::vector<int> unaligned_codeword(codeword.begin() + crop_start, codeword.begin() + crop_end);
+
+                // decode
+                auto llr = bits_to_llr(unaligned_codeword);
+                const auto start = std::chrono::steady_clock::now();
+                auto result = dec.decode_unaligned(llr, info_bits);
+                const auto end = std::chrono::steady_clock::now();
+                total_decode_time += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+                if (result.msg == msg)
+                    ++succ, succ_confidence += result.confidence;
+                else
+                    ++fail;
+            }
+
+            const auto success_rate = 100.0 * succ / num_crop_iter;
+            const auto fail_rate = 100.0 * fail / num_crop_iter;
+            const auto confidence = succ > 0 ? succ_confidence / succ : 0;
+            std::cout << "Crop: " << crop << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << confidence << "\n";
+        }
+        const auto avg_decode_time = total_decode_time.count() / (num_crop_iter * (crop_size_end - crop_size_start + 1));
+        std::cout << "\nAverage codeword decode time: " << avg_decode_time << " ms\n----------------------------------------\n";
     }
 
     std::cout << "\nDone\n";

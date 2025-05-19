@@ -12,7 +12,7 @@ namespace eccpp {
 template <typename T>
 class polar_dec {
 public:
-    polar_dec(size_t n) : n_(n) {
+    polar_dec(size_t n, std::uint_fast32_t permutation_seed = 0) : n_(n), permutation_seed_(permutation_seed) {
         if (!n || (n & (n - 1)) != 0)
             throw std::invalid_argument("n must be a power of 2");
     }
@@ -41,7 +41,7 @@ public:
         // encode all possible messages and pick the best match
         T best_match = std::numeric_limits<T>::lowest();
         T second_best_match = best_match;
-        polar_enc_butterfly enc(n_);
+        polar_enc_butterfly enc(n_, permutation_seed_);
         std::vector<int> msg_with_frozen_bits(n_);
         while (true) {
             const auto codeword = enc.encode(msg_with_frozen_bits);
@@ -151,6 +151,7 @@ private:
     }
 
     const size_t n_;
+    const std::uint_fast32_t permutation_seed_;
 };
 
 } // namespace eccpp

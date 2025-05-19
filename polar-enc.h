@@ -5,12 +5,17 @@
 #include <vector>
 
 #include "gn.h"
+#include "shuffle.h"
 
 namespace eccpp {
 
 class polar_enc {
 public:
-    polar_enc(size_t n) : gn_(gn(n)) {}
+    // permutation_seed is used to shuffle the generator matrix rows before encoding
+    // (or shuffle the bits of the codeword after encoding, which is equivalent).
+    // permutation_seed = 0 means no shuffling, sometimes refered as "natural order".
+    // If you come across "bit-reverse permutation matrix BN", it's the same thing.
+    polar_enc(size_t n, std::uint_fast32_t permutation_seed = 0) : gn_(gn(n)), permutation_seed_(permutation_seed) {}
 
     std::vector<int> encode(const std::vector<int>& data) const {
         const auto N = data.size();
@@ -28,11 +33,16 @@ public:
 
             result[i] = r;
         }
+
+        if (permutation_seed_)
+            eccpp::shuffle(result, permutation_seed_);
+
         return result;
     }
 
 private:
     const mdarray<int> gn_;
+    const std::uint_fast32_t permutation_seed_;
 };
 
 //
@@ -41,7 +51,7 @@ private:
 //
 class polar_enc_butterfly {
 public:
-    polar_enc_butterfly(size_t n) : N(n), log2N(static_cast<size_t>(std::log2(n) + 0.5)) {
+    polar_enc_butterfly(size_t n, std::uint_fast32_t permutation_seed = 0) : N(n), log2N(static_cast<size_t>(std::log2(n) + 0.5)), permutation_seed_(permutation_seed) {
         if (!n || (n & (n - 1)) != 0)
             throw std::invalid_argument("n must be a power of 2");
     }
@@ -51,8 +61,8 @@ public:
             throw std::invalid_argument("Data size must match transform size");
 
         auto result = data;
+        size_t step = 1;
         for (size_t stage = 0; stage < log2N; ++stage) {
-            const size_t step = 1 << stage;
             for (size_t i = 0; i < N; i += 2 * step) {
                 for (size_t j = 0; j < step; ++j) {
                     int a = result[i + j];
@@ -61,13 +71,19 @@ public:
                     result[i + j + step] = b;
                 }
             }
+            step <<= 1;
         }
+
+        if (permutation_seed_)
+            eccpp::shuffle(result, permutation_seed_);
+
         return result;
     }
 
 private:
     const size_t N;
     const size_t log2N;
+    const std::uint_fast32_t permutation_seed_;
 };
 
 } // namespace eccpp
