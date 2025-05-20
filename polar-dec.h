@@ -90,17 +90,15 @@ public:
         // encode all possible messages and pick the best match
         T best_match = std::numeric_limits<T>::lowest();
         T second_best_match = best_match;
-        polar_enc_butterfly enc(n_);
+        polar_enc_butterfly enc(n_, permutation_seed_);
         std::vector<int> msg_with_frozen_bits(n_);
         const auto max_offset = n_ - llr.size();
         while (true) {
             const auto codeword = enc.encode(msg_with_frozen_bits);
             for (auto off = 0; off <= max_offset; ++off) {
                 T match = 0;
-                for (size_t i = 0; i < n_; ++i) {
-                    const auto& prob = llr[i + off];
-                    match += codeword[i] ? -prob : prob;
-                }
+                for (size_t i = 0; i < llr.size(); ++i)
+                    match += codeword[i + off] ? -llr[i] : llr[i];
 
                 if (match > best_match) {
                     second_best_match = best_match;
