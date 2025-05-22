@@ -11,6 +11,7 @@
 #include "gn.h"
 #include "polar-enc.h"
 #include "hamdist.h"
+#include "hamweight.h"
 #include "longest-common.h"
 #include "shuffle.h"
 
@@ -80,6 +81,14 @@ int main() {
             auto codeword = enc.encode(msg);
             if (iter)
                 eccpp::shuffle(codeword, shuffle_seed);
+
+            // apparently, for linear block codes you can just use Hamming weight instead
+            // of exhaustive search: https://www.ece.unb.ca/cgi-bin/tervo/polygen2.pl
+            // (scroll down to Distance Analysis):
+            //const auto cw_weight = eccpp::hamweight(codeword);
+            //if (cw_weight > 0)
+            //    min_dist = std::min(min_dist, cw_weight);
+            // however, we also do LCR search, so it doesn't really matter
 
             for (const auto& cw: codewords) {
                 const auto dist = eccpp::hamdist(cw, codeword);
