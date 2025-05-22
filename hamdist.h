@@ -8,14 +8,15 @@
 
 namespace eccpp {
 
-size_t hamdist(const std::vector<int>& a, const std::vector<int>& b) {
+template <typename T>
+size_t hamdist(const std::vector<T>& a, const std::vector<T>& b) {
     if (a.size() != b.size())
         throw std::invalid_argument("Hamming distance: dimensions must match");
 
     size_t distance = 0;
     for (size_t i = 0; i < a.size(); ++i) {
-        const int a_val = a[i];
-        const int b_val = b[i];
+        const T a_val = a[i];
+        const T b_val = b[i];
         assert(a_val == 0 || a_val == 1);
         assert(b_val == 0 || b_val == 1);
 
@@ -25,7 +26,8 @@ size_t hamdist(const std::vector<int>& a, const std::vector<int>& b) {
     return distance;
 }
 
-size_t hamdist(const mdarray<int>& a, const mdarray<int>& b) {
+template <typename T>
+size_t hamdist(const mdarray<T>& a, const mdarray<T>& b) {
     if (a.dimensions() != b.dimensions())
         throw std::invalid_argument("Hamming distance: dimensions must match");
 
@@ -34,8 +36,8 @@ size_t hamdist(const mdarray<int>& a, const mdarray<int>& b) {
     std::vector<size_t> indices(dims.size(), 0);
 
     while (true) {
-        const int a_val = a(indices);
-        const int b_val = b(indices);
+        const T a_val = a(indices);
+        const T b_val = b(indices);
         assert(a_val == 0 || a_val == 1);
         assert(b_val == 0 || b_val == 1);
 
