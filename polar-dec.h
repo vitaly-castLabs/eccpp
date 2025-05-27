@@ -38,16 +38,25 @@ public:
         result dec_result;
         dec_result.msg.resize(info_bits.size());
 
+        // if shuffling is enabled (permutation_seed_ is non-zero), we need to make a copy of the input data and
+        // unshuffle it. This is much more efficient than shuffling each codeword on the encoder side.
+        std::vector<T> llr_unshuffled_storage;
+        if (permutation_seed_) {
+            llr_unshuffled_storage = llr;
+            eccpp::unshuffle(llr_unshuffled_storage, permutation_seed_);
+        }
+        auto& llr_unshuffled = permutation_seed_ ? llr_unshuffled_storage : llr;
+
         // encode all possible messages and pick the best match
         T best_match = std::numeric_limits<T>::lowest();
         T second_best_match = best_match;
-        polar_enc_butterfly enc(n_, permutation_seed_);
+        polar_enc_butterfly enc(n_);
         std::vector<int> msg_with_frozen_bits(n_);
         while (true) {
             const auto codeword = enc.encode(msg_with_frozen_bits);
             T match = 0;
             for (size_t i = 0; i < n_; ++i)
-                match += codeword[i] ? -llr[i] : llr[i];
+                match += codeword[i] ? -llr_unshuffled[i] : llr_unshuffled[i];
 
             if (match > best_match) {
                 second_best_match = best_match;
@@ -86,6 +95,8 @@ public:
 
         result dec_result;
         dec_result.msg.resize(info_bits.size());
+
+        // we can't do unshuffling here because the exact position of the LLR span is unknown
 
         // encode all possible messages and pick the best match
         T best_match = std::numeric_limits<T>::lowest();

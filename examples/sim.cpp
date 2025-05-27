@@ -17,7 +17,7 @@ static const struct {
 
     bool erasure_crop = true;
     bool erasure_scatter = true;
-    bool erasure_crop_unaligned = false;
+    bool erasure_crop_unaligned = true;
 } params;
 
 std::vector<float> bits_to_llr(const std::vector<int>& bits) {
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     std::minstd_rand rg;
     rg.seed(987654321);
 
-    std::cout << "\nPolar encoder/decoder simulation\n";
+    std::cout << "\nPolar encoder/decoder simulation suite\n";
     if (params.erasure_crop) {
         // "crop" simulation:
         // only a limited contiguous span of bits is available for decoding (like an image crop, hence the name).
@@ -92,9 +92,9 @@ int main(int argc, char **argv) {
         // Crop: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%
         // Crop: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%
 
-        const int num_crop_iter = params.iter_factor * 3;
-        const auto crop_size_start = 15;
-        const auto crop_size_end = 30;
+        const int num_crop_iter = params.iter_factor * 10;
+        const auto crop_size_start = 14;
+        const auto crop_size_end = 25;
         std::chrono::milliseconds total_decode_time{};
         for (int crop = crop_size_start; crop <= crop_size_end; ++crop) {
             int succ = 0, fail = 0;
@@ -183,9 +183,9 @@ int main(int argc, char **argv) {
         // Scatter: 29 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 23.0%
         // Scatter: 30 bits, decoding success: 100.0%, wrong corrections: 0.0%, repeat code success: 26.0%
 
-        const int num_scatter_iter = params.iter_factor * 3;
-        const auto scatter_size_start = 15;
-        const auto scatter_size_end = 30;
+        const int num_scatter_iter = params.iter_factor * 10;
+        const auto scatter_size_start = 14;
+        const auto scatter_size_end = 25;
         for (int num_bits = scatter_size_start; num_bits <= scatter_size_end; ++num_bits) {
             int succ = 0, fail = 0;
             float succ_confidence = 0;
@@ -233,15 +233,16 @@ int main(int argc, char **argv) {
             const auto confidence = succ > 0 ? succ_confidence / succ : 0;
             std::cout << "Scatter: " << num_bits << " bits, success: " << std::fixed << std::setprecision(1) << success_rate << "%, fail: " << std::setprecision(1) << fail_rate << "%, confidence: " << std::setprecision(2) << confidence << "\n";
         }
+        std::cout << "----------------------------------------\n";
     }
 
     if (params.erasure_crop_unaligned) {
         std::cout << "\n# Crop-like erasure simulation with unknown crop location:\n";
 
-        // this is a lot slower, no x3 factor
+        // this is a lot slower, no x10 factor
         const int num_crop_iter = params.iter_factor;
-        const auto crop_size_start = 15;
-        const auto crop_size_end = 30;
+        const auto crop_size_start = 25;
+        const auto crop_size_end = 35;
         std::chrono::milliseconds total_decode_time{};
         for (int crop = crop_size_start; crop <= crop_size_end; ++crop) {
             int succ = 0, fail = 0;
