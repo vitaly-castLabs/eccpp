@@ -7,6 +7,8 @@
 #include "polar-enc.h"
 #include "polar-dec.h"
 
+#include "./shared.h"
+
 static const struct {
     size_t N = 8192;
     // number of iterations to control execution time vs accuracy:
@@ -19,16 +21,6 @@ static const struct {
     bool erasure_scatter = true;
     bool erasure_crop_unaligned = true;
 } params;
-
-std::vector<float> bits_to_llr(const std::vector<int>& bits) {
-    std::vector<float> llr(bits.size());
-    for (size_t i = 0; i < bits.size(); ++i) {
-        const auto bit = bits[i];
-        // negative (-1 usually) value is utilized to represent erasure / unknown bit
-        llr[i] = bit < 0 ? 0 : (bit ? -10 : 10);
-    }
-    return llr;
-}
 
 int main(int argc, char **argv) {
     const std::uint_fast32_t permutation_seed = 12345;

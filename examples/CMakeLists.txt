@@ -6,3 +6,6 @@ target_link_libraries(frozen-bits PRIVATE eccpp)
 
 add_executable(polar-dist polar-dist.cpp)
 target_link_libraries(polar-dist PRIVATE eccpp)
+
+add_executable(punct punct.cpp)
+target_link_libraries(punct PRIVATE eccpp)
