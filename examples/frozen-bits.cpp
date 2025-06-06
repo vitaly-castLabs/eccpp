@@ -14,7 +14,7 @@
 #include "gn.h"
 
 constexpr size_t N_START = 8;
-constexpr size_t N_END = 16384;
+constexpr size_t N_END = 32768;
 
 struct row {
     size_t idx = 0;
@@ -22,7 +22,7 @@ struct row {
 };
 
 int main() {
-    size_t start_rows_to_print = N_START / 2;
+    size_t start_rows_to_print = 8;
     for (size_t N = N_START; N <= N_END; N *= 2) {
         std::cout << "\n\nN = " << N << "\n";
         const auto gn = eccpp::gn(N);
@@ -79,7 +79,8 @@ int main() {
             if (info_bits.empty())
                 break;
 
-            std::sort(info_bits.begin(), info_bits.end());
+            // don't sort by index, keep polarization strength order instead
+            //std::sort(info_bits.begin(), info_bits.end());
 
             std::cout << "Dist " << std::setw(5) << NN << " [" << std::setw(3) << info_bits.size() << "]: {";
             for (size_t i = 0; i < info_bits.size(); ++i) {
