@@ -1,7 +1,6 @@
 #ifndef ECCPP_POLAR_ENC_H
 #define ECCPP_POLAR_ENC_H
 
-#include <cmath>
 #include <vector>
 
 #include "gn.h"
@@ -51,7 +50,7 @@ private:
 //
 class polar_enc_butterfly {
 public:
-    polar_enc_butterfly(size_t n, std::uint_fast32_t permutation_seed = 0) : N(n), log2N(static_cast<size_t>(std::log2(n) + 0.5)), permutation_seed_(permutation_seed) {
+    polar_enc_butterfly(size_t n, std::uint_fast32_t permutation_seed = 0) : N(n), permutation_seed_(permutation_seed) {
         if (!n || (n & (n - 1)) != 0)
             throw std::invalid_argument("n must be a power of 2");
     }
@@ -61,9 +60,8 @@ public:
             throw std::invalid_argument("Data size must match transform size");
 
         auto result = data;
-        size_t step = 1;
-        for (size_t stage = 0; stage < log2N; ++stage) {
-            for (size_t i = 0; i < N; i += 2 * step) {
+        for (size_t step = 1; step < N; step *= 2) {
+            for (size_t i = 0; i < N; i += step * 2) {
                 for (size_t j = 0; j < step; ++j) {
                     int a = result[i + j];
                     int b = result[i + j + step];
@@ -71,7 +69,6 @@ public:
                     result[i + j + step] = b;
                 }
             }
-            step <<= 1;
         }
 
         if (permutation_seed_)
@@ -82,7 +79,6 @@ public:
 
 private:
     const size_t N;
-    const size_t log2N;
     const std::uint_fast32_t permutation_seed_;
 };
 
