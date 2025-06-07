@@ -60,16 +60,10 @@ public:
             throw std::invalid_argument("Data size must match transform size");
 
         auto result = data;
-        for (size_t step = 1; step < N; step *= 2) {
-            for (size_t i = 0; i < N; i += step * 2) {
-                for (size_t j = 0; j < step; ++j) {
-                    int a = result[i + j];
-                    int b = result[i + j + step];
-                    result[i + j] = a ^ b;
-                    result[i + j + step] = b;
-                }
-            }
-        }
+        for (size_t step = 1; step < N; step *= 2)
+            for (size_t i = 0; i < N; i += step * 2)
+                for (size_t j = 0; j < step; ++j)
+                    result[i + j] ^= result[i + j + step];
 
         if (permutation_seed_)
             eccpp::shuffle(result, permutation_seed_);
