@@ -1,3 +1,6 @@
+add_executable(hello-world hello-world.cpp)
+target_link_libraries(hello-world PRIVATE eccpp)
+
 add_executable(sim sim.cpp)
 target_link_libraries(sim PRIVATE eccpp)
 
