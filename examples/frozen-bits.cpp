@@ -10,6 +10,7 @@
 #include <string>
 #include <iomanip>
 #include <algorithm>
+#include <bit>
 
 #include "gn.h"
 
@@ -22,10 +23,17 @@ struct row {
 };
 
 int main() {
+    // it appears that instead of counting 1s (Hamming weight), we can just
+    // calculate 2^popcount(row index)
+    bool popcnt_mismatch_detected = false;
+
     size_t start_rows_to_print = 8;
     for (size_t N = N_START; N <= N_END; N *= 2) {
         std::cout << "\n\nN = " << N << "\n";
         const auto gn = eccpp::gn(N);
+
+        if (N < 32)
+            std::cout << "\nGen matrix:\n" << gn << "\n";
 
         std::vector<row> rows;
         rows.reserve(N);
@@ -43,9 +51,9 @@ int main() {
             return a.one_cnt > b.one_cnt;
         });
 
-        std::cout << "---------------------------------\n" <<
-                     " row  |    1s | rows with more 1s\n" <<
-                     "---------------------------------\n";
+        std::cout << "------------------------------------------\n" <<
+                     " row  |    1s | 2^pop | rows with more 1s\n" <<
+                     "------------------------------------------\n";
 
         const size_t end_rows_to_print = start_rows_to_print / 4;
         size_t idx = 0;
@@ -54,10 +62,17 @@ int main() {
         std::vector<std::vector<size_t>> info_bit_sets(1);
         const size_t num_bit_sets = 3;
         for (const auto& r: rows) {
+            const auto ones = r.one_cnt;
+            const auto popcnt = (1 << std::popcount(r.idx));
             if (idx < start_rows_to_print || idx >= N - end_rows_to_print)
-                std::cout << std::setw(5) << r.idx << " | " << std::setw(5) << r.one_cnt << " | " << (r.one_cnt != prev_cnt ? std::to_string(idx) : "") << "\n";
+                std::cout << std::setw(5) << r.idx << " | " << std::setw(5) << ones << " | " << std::setw(5) << popcnt << " | " << (r.one_cnt != prev_cnt ? std::to_string(idx) : "") << "\n";
             else if (!printed_dots)
                 std::cout << "...\n", printed_dots = true;
+
+            if (ones != popcnt) {
+                std::cerr << "popcnt hypothesis fails on " << r.idx << " (calculated 1s: " << ones << ", pop: " << popcnt << ")\n";
+                popcnt_mismatch_detected = true;
+            }
 
             if (info_bit_sets.size() <= num_bit_sets) {
                 if (r.one_cnt != prev_cnt) {
@@ -94,4 +109,6 @@ int main() {
 
         start_rows_to_print += 4;
     }
+
+    std::cout << "\npopcnt formula: " << (popcnt_mismatch_detected ? "failed" : "correct") << "\n";
 }
