@@ -8,7 +8,7 @@
 #include "./shared.h"
 
 constexpr size_t N = 16;
-const std::vector<size_t> info_bits = {14, 15};
+const std::vector<size_t> info_bits = {15, 14};
 
 void printBits(const std::vector<int>& bits) {
     for (const auto& b: bits)
